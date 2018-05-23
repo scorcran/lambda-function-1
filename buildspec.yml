@@ -10,7 +10,7 @@ phases:
     commands:
       - echo Entered the install phase...
       - echo Installing dependencies...
-      - yum groupinstall -y "Development Tools"
+      - yum groupinstall -y "Development Tools"``
       - yum -y install gcc openssl openssl-devel libffi libffi-devel python-devel gmp-devel
       - pip install --upgrade pip setuptools
   pre_build:
@@ -19,7 +19,7 @@ phases:
   build:
     commands:
       - echo Entered the build phase...
-      - pip install --use-wheel -t $APP_SRC/package/$MODULES_DIR/ -r $APP_SRC/requirements.txt
+      - pip install --use-wheel -t src/package/vendored/ -r src/requirements.txt
   post_build:
     commands:
       - echo Entered the post_build phase...
@@ -27,4 +27,4 @@ artifacts:
   files:
     - "package/**/*"
     - s3tosftp-worker.py
-  base-directory: "$APP_SRC"
+  base-directory: "src"
