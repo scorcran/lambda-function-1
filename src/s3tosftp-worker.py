@@ -197,12 +197,15 @@ def _upload_file(file_path):
                                cnopts=cnopts) as sftp:
             with sftp.cd(sftp_location):
                 if create_dir_structure == "True":
-                    sftp.makedirs(os.path.dirname(file_path))
-                    sftp.put('{}/{}'.format(TMP_DIR, file_path), file_path)
+                    base_path_list = file_path.split('/')
+                    base_path_list.pop(1)
+                    base_path = "/".join(base_path_list)
+                    sftp.makedirs(os.path.dirname(base_path))
+                    sftp.put(file_path, base_path)
                     logger.info('File {} uploaded successfully'.format(os.path.basename(file_path)))
                 else:
                     filename = os.path.split(file_path)[1]
-                    sftp.put('{}/{}'.format(TMP_DIR, file_path), filename)
+                    sftp.put(file_path, filename)
                     logger.info('File {} uploaded successfully'.format(filename))
 
     except (pysftp.ConnectionException, pysftp.CredentialException,
@@ -250,26 +253,30 @@ def retry_failed_messages():
 def _encrypt_file(file_path):
     logger.info('Encrypting {} before upload to SFTP destination...'.format(os.path.basename(file_path)))
 
-    gpg = gnupg.GPG(gnupghome='{}/gpghome'.format(TMP_DIR))
-
     key_path = '{}/pgp_key.pub'.format(TMP_DIR)
     public_key = _create_key_file(key_path, os.environ['PGP_PUB_KEY_PARAM'])
     key_data = open(public_key).read()
-    import_result = gpg.import_keys(key_data)
 
     keys = []
 
-    for key in import_result.results:
-        keys.append(key['fingerprint'])
+    try:
+        gpg = gnupg.GPG(gnupghome='{}/gpghome'.format(TMP_DIR))
+        import_result = gpg.import_keys(key_data)
 
-    encrypted_file_path = '{}.{}'.format(file_path, "enc")
+        for key in import_result.results:
+            keys.append(key['fingerprint'])
 
-    with open(file_path, 'rb') as f:
-        encryption = gpg.encrypt_file(
-            f, recipients=json.dumps(keys),
-            output=encrypted_file_path, always_trust=True)
+        encrypted_file_path = '{}.{}'.format(file_path, "enc")
 
-    if encryption.ok != True:
+        with open(file_path, 'rb') as f:
+            encryption = gpg.encrypt_file(
+                f, recipients=keys,
+                output=encrypted_file_path, always_trust=True)
+
+        if encryption.ok != True:
+            raise
+
+        return encrypted_file_path
+    except Exception as err:
+        logger.error(err)
         raise
-
-    return encrypted_file_path
