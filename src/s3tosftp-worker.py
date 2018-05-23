@@ -1,3 +1,4 @@
+from __future__ import print_function
 import errno
 import json
 import os
@@ -101,12 +102,12 @@ def send_success_notification(context, s3_bucket, s3_key, event_time):
 
 # AWS SSM Parameter Store Functions
 
-def _write_private_key(contents, private_key_path):
+def _write_key_file(contents, key_path):
     try:
-        logger.info('Creating Private Key file from SSM secure parameter store value...')
-        private_key_file = open(private_key_path, 'w')
-        private_key_file.write(contents)
-        private_key_file.close()
+        logger.info('Creating key file from SSM secure parameter store value...')
+        key_file = open(key_path, 'w')
+        key_file.write(contents)
+        key_file.close()
     except Exception as err:
         logger.error(str(err))
         raise
@@ -145,7 +146,7 @@ def _create_key_file(file_path, parameter_name):
     # Get private key from SSM Parameter Store
     key = _get_ssm_parameter(parameter_name)
     # Write private key to file
-    _write_private_key(key, key_path)
+    _write_key_file(key, key_path)
 
     return key_path
 
@@ -156,11 +157,13 @@ def _download_s3_object(s3_bucket, s3_key):
     logger.info('Downloading {} object to Lambda {} directory...'.format(s3_object, TMP_DIR))
     local_object_dir = '{}/{}'.format(TMP_DIR, os.path.dirname(s3_key))
     _create_local_tmp_dirs(local_object_dir)
+    local_object_path = '{}/{}'.format(TMP_DIR, s3_key)
 
     try:
         s3 = boto3.resource('s3', config=Config(signature_version='s3v4'))
         bucket = s3.Bucket(s3_bucket)
         bucket.download_file(s3_key, '{}/{}'.format(TMP_DIR, s3_key))
+        return local_object_path
 
     except ClientError:
         logger.error('{} not found in {}'.format(s3_key, s3_bucket))
@@ -218,8 +221,8 @@ def _upload_file(file_path):
 
 def new_s3_object(s3_bucket, s3_key):
     try:
-        _download_s3_object(s3_bucket, s3_key)
-        _upload_file(s3_key)
+        file_path = _download_s3_object(s3_bucket, s3_key)
+        _upload_file(file_path)
     except Exception as err:
         logger.error(str(err))
         raise
@@ -259,7 +262,7 @@ def _encrypt_file(file_path):
     for key in import_result.results:
         keys.append(key['fingerprint'])
 
-    encrypted_file_path = '{}.{}'.format(file_path, ".enc")
+    encrypted_file_path = '{}.{}'.format(file_path, "enc")
 
     with open(file_path, 'rb') as f:
         encryption = gpg.encrypt_file(
