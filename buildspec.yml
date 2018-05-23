@@ -1,0 +1,29 @@
+version: 0.2
+
+env:
+  variables:
+    APP_SRC: "src"
+    MODULES_DIR: "vendored"
+
+phases:
+  install:
+    commands:
+      - echo Entered the install phase...
+      - echo Installing dependencies...
+      - yum groupinstall -y "Development Tools"
+      - yum -y install gcc openssl openssl-devel libffi libffi-devel python-devel gmp-devel
+  pre_build:
+    commands:
+      - echo Entered the pre_build phase...
+  build:
+    commands:
+      - echo Entered the build phase...
+      - pip install --use-wheel -t $APP_SRC/package/$MODULES_DIR/ -r $APP_SRC/requirements.txt
+  post_build:
+    commands:
+      - echo Entered the post_build phase...
+artifacts:
+  files:
+    - "package/**/*"
+    - s3tosftp-worker.py
+  base-directory: "$APP_SRC"
