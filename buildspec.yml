@@ -12,6 +12,7 @@ phases:
       - echo Installing dependencies...
       - yum groupinstall -y "Development Tools"
       - yum -y install gcc openssl openssl-devel libffi libffi-devel python-devel gmp-devel
+      - pip install --upgrade pip setuptools
   pre_build:
     commands:
       - echo Entered the pre_build phase...
