@@ -19,12 +19,13 @@ phases:
   build:
     commands:
       - echo Entered the build phase...
-      - pip install --no-dependencies -t src/vendored/ -r src/requirements.txt
+      - pip install -t src/package/vendored/ -r src/requirements.txt
   post_build:
     commands:
       - echo Entered the post_build phase...
 artifacts:
   files:
-    - "**/*"
+    - "package/**/*"
     - s3tosftp-worker.py
   base-directory: "src"
+  discard-paths: yes
