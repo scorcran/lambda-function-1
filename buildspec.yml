@@ -13,9 +13,6 @@ phases:
       - yum groupinstall -y "Development Tools"``
       - yum -y install gcc openssl openssl-devel libffi libffi-devel python-devel gmp-devel
       - pip install --upgrade pip setuptools
-  pre_build:
-    commands:
-      - echo Entered the pre_build phase...
   build:
     commands:
       - echo Entered the build phase...
@@ -24,7 +21,9 @@ phases:
     commands:
       - echo Entered the post_build phase...
       - rm src/requirements.txt
+      - aws cloudformation package --template-file sam.yaml --s3-bucket airdev-sean-artifact-repo --output-template-file output-sam.yaml
 artifacts:
+  type: zip
   files:
-    - "**/*"
-  base-directory: "src"
+    - sam.yaml
+    - output-sam.yaml

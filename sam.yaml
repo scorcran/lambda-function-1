@@ -1,0 +1,10 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Uploads file from S3 to an SFTP server
+Resources:
+  S3toSFTP-Worker:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: s3tosftp-worker.lambda_handler
+      Runtime: python2.7
+      CodeUri: ./src
