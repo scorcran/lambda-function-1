@@ -9,3 +9,12 @@ Resources:
       Handler: s3tosftp-worker.lambda_handler
       Runtime: python2.7
       CodeUri: ./src
+
+      AutoPublishAlias: dev
+
+      DeploymentPreference:
+       Type: AllAtOnce
+       Alarms:
+         # A list of alarms that you want to monitor
+         - !Ref AliasErrorMetricGreaterThanZeroAlarm
+         - !Ref LatestVersionErrorMetricGreaterThanZeroAlarm
