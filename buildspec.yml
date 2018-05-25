@@ -26,3 +26,4 @@ artifacts:
   files:
     - sam.yaml
     - output-sam.yaml
+    - appspec.yml
