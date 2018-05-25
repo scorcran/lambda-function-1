@@ -5,6 +5,7 @@ Resources:
   S3toSFTPWorker:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: s3tosftp-worker
       Handler: s3tosftp-worker.lambda_handler
       Runtime: python2.7
       CodeUri: ./src
